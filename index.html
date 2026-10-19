@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng 20/10 Trà My - Tuấn Kiệt</title>
+    <!-- Tailwind CSS for UI Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Great+Vibes&family=Montserrat:ital,wght@0,300;0,400;0,600;0,800;1,300&family=Pacifico&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020205;
+            font-family: 'Montserrat', sans-serif;
+            color: #ffffff;
+        }
+
+        canvas#stageCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Overlay UI Container */
+        .ui-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+        }
+
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* Dialogue Speech Bubble */
+        .speech-bubble {
+            position: absolute;
+            top: 18%;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px) scale(0.9);
+            background: rgba(8, 12, 28, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            box-shadow: 
+                0 0 25px rgba(0, 229, 255, 0.25),
+                inset 0 0 15px rgba(0, 229, 255, 0.15);
+            border-radius: 20px;
+            padding: 18px 28px;
+            max-width: 90vw;
+            width: 480px;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 20;
+        }
+
+        .speech-bubble.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 12px 12px 0 12px;
+            border-style: solid;
+            border-color: rgba(8, 12, 28, 0.85) transparent transparent transparent;
+        }
+
+        .dialogue-text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            font-weight: 500;
+            color: #e0f7fc;
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+            min-height: 1.6em;
+        }
+
+        /* Title Header */
+        .title-header {
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all 1.5s ease-out;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .title-header.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .main-title {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.8rem, 7vw, 5.5rem);
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 30%, #ff0844 70%, #ffb199 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.6));
+            line-height: 1.1;
+        }
+
+        .sub-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+            color: #ff99cc;
+            text-shadow: 0 0 12px rgba(255, 105, 180, 0.8);
+            letter-spacing: 1px;
+        }
+
+        /* Controls Toolbar */
+        .controls-wrapper {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            gap: 12px;
+            z-index: 30;
+        }
+
+        .btn-round {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(10, 15, 30, 0.7);
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            color: #00e5ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .btn-round:hover {
+            background: rgba(0, 229, 255, 0.25);
+            border-color: #00e5ff;
+            color: #ffffff;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+        }
+
+        .btn-replay {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(40px);
+            padding: 12px 32px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(255,20,147,0.3));
+            border: 1px solid rgba(0, 229, 255, 0.6);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 30;
+        }
+
+        .btn-replay.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .btn-replay:hover {
+            background: linear-gradient(135deg, rgba(0,229,255,0.5), rgba(255,20,147,0.6));
+            box-shadow: 0 0 30px rgba(255, 20, 147, 0.7);
+            transform: translateX(-50%) translateY(-2px) scale(1.05);
+        }
+
+        /* Start Overlay */
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #080c20 0%, #020205 100%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease, visibility 1s ease;
+            padding: 20px;
+        }
+
+        #start-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .start-btn {
+            padding: 18px 48px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #00c6ff, #0072ff, #ff007f);
+            background-size: 200% 200%;
+            animation: gradientMove 4s ease infinite;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 0 30px rgba(0, 198, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 0 50px rgba(255, 0, 127, 0.8);
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating 3D Wish Cards DOM Overlay (Hybrid rendering) */
+        .wish-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 15;
+        }
+
+        .wish-card {
+            position: absolute;
+            padding: 12px 22px;
+            background: rgba(8, 14, 32, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 30px;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 15px rgba(0, 229, 255, 0.2);
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.6);
+            transition: opacity 0.8s ease, transform 0.8s ease, border-color 0.3s ease;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .wish-card:hover {
+            border-color: #ff007f;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
+            z-index: 50 !important;
+        }
+
+        .wish-card.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Rendering Canvas -->
+    <canvas id="stageCanvas"></canvas>
+
+    <!-- UI Overlay Layer -->
+    <div class="ui-layer">
+        <!-- Title Header -->
+        <div id="titleHeader" class="title-header">
+            <h1 class="main-title">Chúc Mừng Ngày 20/10</h1>
+            <p class="sub-title">✨ Dành Tặng Trà My ✨</p>
+        </div>
+
+        <!-- Speech Bubble for Eyes -->
+        <div id="speechBubble" class="speech-bubble">
+            <p id="dialogueText" class="dialogue-text"></p>
+        </div>
+
+        <!-- Replay Button -->
+        <button id="btnReplay" class="btn-replay interactive">
+            <i class="fa-solid fa-rotate-right"></i> Xem Lại Màn Chúc
+        </button>
+    </div>
+
+    <!-- Floating Wishes Overlay -->
+    <div id="wishContainer" class="wish-container"></div>
+
+    <!-- Controls Bar -->
+    <div class="controls-wrapper">
+        <button id="btnAudio" class="btn-round interactive" title="Bật/Tắt Âm Nhạc Synth">
+            <i class="fa-solid fa-music"></i>
+        </button>
+        <button id="btnSparkle" class="btn-round interactive" title="Tạo Thêm Sao Băng & Hạt Sáng">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+    </div>
+
+    <!-- Start Overlay Screen -->
+    <div id="start-screen">
+        <div class="text-center max-w-lg px-4">
+            <div class="mb-6 inline-block relative">
+                <i class="fa-solid fa-eye text-cyan-400 text-6xl animate-pulse"></i>
+                <i class="fa-solid fa-heart text-pink-500 text-2xl absolute -top-2 -right-2 animate-bounce"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-cyan-200 mb-4" style="font-family: 'Great Vibes', cursive;">
+                Gửi Trà My...
+            </h1>
+            <p class="text-cyan-100 text-sm md:text-base font-light mb-8 leading-relaxed opacity-90">
+                Một không gian đêm huyền ảo được tạo riêng bởi <strong class="text-cyan-300 font-semibold">Tuấn Kiệt</strong> dành cho <strong class="text-pink-300 font-semibold">Trà My</strong> nhân ngày Phụ Nữ Việt Nam 20/10.
+            </p>
+            <button id="btnStart" class="start-btn interactive">
+                <i class="fa-solid fa-sparkles mr-2"></i> MỞ MÓN QUÀ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 20/10 Dedicated Experience for Trà My from Tuấn Kiệt
+         * Full Canvas Render Engine with 3D Parametric Heart, Dynamic Eyes, Particle Physics & Web Audio Synth
+         */
+
+        // Application State Management
+        const STATE = {
+            phase: 'IDLE', // IDLE -> DIALOGUE -> EYES_CLOSING -> HEART_3D -> EXPLODE -> FLOATING_WISHES
+            width: window.innerWidth,
+            height: window.innerHeight,
+            time: 0,
+            audioEnabled: false,
+            mouse: { x: window.innerWidth / 2, y: window.innerHeight / 2, active: false }
+        };
+
+        // DOM Elements
+        const canvas = document.getElementById('stageCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('start-screen');
+        const btnStart = document.getElementById('btnStart');
+        const speechBubble = document.getElementById('speechBubble');
+        const dialogueText = document.getElementById('dialogueText');
+        const titleHeader = document.getElementById('titleHeader');
+        const wishContainer = document.getElementById('wishContainer');
+        const btnReplay = document.getElementById('btnReplay');
+        const btnAudio = document.getElementById('btnAudio');
+        const btnSparkle = document.getElementById('btnSparkle');
+
+        // Wishes Dataset
+        const WISHES = [
+            "🌸 Chúc Trà My 20/10 luôn tràn ngập niềm vui và hạnh phúc!",
+            "✨ Chúc cô gái xinh đẹp nhất của tớ luôn mỉm cười mỗi ngày!",
+            "💖 Cảm ơn Trà My vì đã xuất hiện và làm thế giới của Tuấn Kiệt thêm rực rỡ!",
+            "🌹 Mong mọi điều ngọt ngào nhất trên đời luôn đến với Trà My!",
+            "💫 20/10 vạn điều như ý, mãi là em bé đáng yêu nhé Trà My!"
+        ];
+
+        // Dialogue Script
+        const DIALOGUE_SCRIPT = [
+            { text: "Tớ là Tuấn Kiệt...", delay: 2800 },
+            { text: "Nay  là  20/10 á...", delay: 2600 },
+            { text: "Tớ  có  điều  này  muốn  dành  riêng  cho  Trà My...", delay: 3200 }
+        ];
+
+        // Responsive Canvas
+        function resizeCanvas() {
+            STATE.width = canvas.width = window.innerWidth;
+            STATE.height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Mouse Move Handling for Trail
+        window.addEventListener('mousemove', (e) => {
+            STATE.mouse.x = e.clientX;
+            STATE.mouse.y = e.clientY;
+            STATE.mouse.active = true;
+            spawnCursorParticles(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches[0]) {
+                STATE.mouse.x = e.touches[0].clientX;
+                STATE.mouse.y = e.touches[0].clientY;
+                STATE.mouse.active = true;
+                spawnCursorParticles(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        // Helper Random Functions
+        const random = (min, max) => Math.random() * (max - min) + min;
+        const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // ==========================================
+        // WEB AUDIO SYNTHESIZER (Ambient & Chimes)
+        // ==========================================
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.isInit = false;
+            }
+
+            init() {
+                if (this.isInit) return;
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                    this.isInit = true;
+                    this.playAmbientPad();
+                } catch(e) {
+                    console.log("Web Audio API error", e);
+                }
+            }
+
+            playAmbientPad() {
+                if (!this.ctx) return;
+                // Create a soft ethereal ambient drone
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+
+                osc1.type = 'sine';
+                osc2.type = 'triangle';
+                
+                // Low pleasant chords
+                osc1.frequency.setValueAtTime(130.81, this.ctx.currentTime); // C3
+                osc2.frequency.setValueAtTime(196.00, this.ctx.currentTime); // G3
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, this.ctx.currentTime);
+
+                gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.12, this.ctx.currentTime + 4);
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc1.start();
+                osc2.start();
+            }
+
+            playChime(freq = 523.25) { // High magical chime
+                if (!this.ctx || !STATE.audioEnabled) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 2.5);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 2.5);
+            }
+
+            playExplosionSound() {
+                if (!this.ctx || !STATE.audioEnabled) return;
+                // Soft magical burst chime cascade
+                const chord = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                chord.forEach((note, idx) => {
+                    setTimeout(() => {
+                        this.playChime(note);
+                    }, idx * 120);
+                });
+            }
+        }
+
+        const audioEngine = new AudioEngine();
+
+        // ==========================================
+        // CANVAS BACKGROUND: STARS, NEBULA & SAO BĂNG
+        // ==========================================
+        
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = random(0, STATE.width);
+                this.y = random(0, STATE.height);
+                this.size = random(0.4, 2.0);
+                this.alpha = random(0.1, 0.9);
+                this.twinkleSpeed = random(0.005, 0.02);
+                this.color = ['#ffffff', '#e0f7fc', '#ffe6f0', '#b3f0ff'][randomInt(0, 3)];
+            }
+            update() {
+                this.alpha += Math.sin(STATE.time * this.twinkleSpeed) * 0.01;
+                if (this.alpha < 0.1) this.alpha = 0.1;
+                if (this.alpha > 1) this.alpha = 1;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class ShootingStar {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = random(STATE.width * 0.1, STATE.width * 0.9);
+                this.y = random(-50, STATE.height * 0.3);
+                this.length = random(80, 180);
+                this.speed = random(12, 22);
+                this.angle = random(Math.PI * 0.2, Math.PI * 0.3); // Angled downwards right
+                this.alpha = 1;
+                this.active = false;
+                this.thickness = random(1.5, 3);
+            }
+            spawn() {
+                this.reset();
+                this.active = true;
+                audioEngine.playChime(random(1200, 1800));
+            }
+            update() {
+                if (!this.active) return;
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.alpha -= 0.012;
+
+                if (this.alpha <= 0 || this.x > STATE.width || this.y > STATE.height) {
+                    this.active = false;
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+
+                const tailX = this.x - Math.cos(this.angle) * this.length;
+                const tailY = this.y - Math.sin(this.angle) * this.length;
+
+                const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.2, '#00e5ff');
+                grad.addColorStop(0.6, '#ff007f');
+                grad.addColorStop(1, 'transparent');
+
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = this.thickness;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(tailX, tailY);
+                ctx.stroke();
+
+                // Bright head spark
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#00e5ff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.thickness * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // Nebula cloud background draw
+        function drawNebula() {
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Cyan Nebula
+            const grad1 = ctx.createRadialGradient(
+                STATE.width * 0.2, STATE.height * 0.3, 50,
+                STATE.width * 0.2, STATE.height * 0.3, STATE.width * 0.5
+            );
+            grad1.addColorStop(0, 'rgba(0, 180, 216, 0.06)');
+            grad1.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad1;
+            ctx.fillRect(0, 0, STATE.width, STATE.height);
+
+            // Pink/Purple Nebula
+            const grad2 = ctx.createRadialGradient(
+                STATE.width * 0.8, STATE.height * 0.7, 50,
+                STATE.width * 0.8, STATE.height * 0.7, STATE.width * 0.5
+            );
+            grad2.addColorStop(0, 'rgba(255, 0, 127, 0.05)');
+            grad2.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad2;
+            ctx.fillRect(0, 0, STATE.width, STATE.height);
+
+            ctx.restore();
+        }
+
+        // ==========================================
+        // ANIME GLOWING BLUE EYES (CON MẮT XANH)
+        // ==========================================
+        class AnimeEyes {
+            constructor() {
+                this.centerX = STATE.width / 2;
+                this.centerY = STATE.height * 0.45;
+                this.eyeSpacing = 110;
+                this.pupilOffsetX = 0;
+                this.pupilOffsetY = 0;
+                this.targetPupilX = 0;
+                this.targetPupilY = 0;
+                this.blinkProgress = 0; // 0 open, 1 closed
+                this.isBlinking = false;
+                this.isFullyClosed = false;
+                this.blushAlpha = 0;
+                this.targetBlush = 0;
+                this.eyeWidth = 55;
+                this.eyeHeight = 65;
+            }
+
+            update() {
+                this.centerX = STATE.width / 2;
+                this.centerY = STATE.height * 0.45;
+                this.eyeSpacing = Math.min(STATE.width * 0.22, 130);
+
+                // Smooth pupil look movement
+                this.pupilOffsetX += (this.targetPupilX - this.pupilOffsetX) * 0.05;
+                this.pupilOffsetY += (this.targetPupilY - this.pupilOffsetY) * 0.05;
+
+                // Random looking around during dialogue
+                if (STATE.phase === 'DIALOGUE' && Math.random() < 0.015) {
+                    this.targetPupilX = random(-18, 18);
+                    this.targetPupilY = random(-10, 10);
+                }
+
+                // Random subtle blink
+                if (!this.isBlinking && !this.isFullyClosed && Math.random() < 0.008) {
+                    this.isBlinking = true;
+                }
+
+                if (this.isBlinking) {
+                    this.blinkProgress += 0.12;
+                    if (this.blinkProgress >= 1) {
+                        this.blinkProgress = 1;
+                        this.isBlinking = false;
+                    }
+                } else if (!this.isFullyClosed && this.blinkProgress > 0) {
+                    this.blinkProgress -= 0.12;
+                    if (this.blinkProgress < 0) this.blinkProgress = 0;
+                }
+
+                if (this.isFullyClosed) {
+                    this.blinkProgress += (1 - this.blinkProgress) * 0.1;
+                }
+
+                // Smooth Blush
+                this.blushAlpha += (this.targetBlush - this.blushAlpha) * 0.05;
+            }
+
+            draw() {
+                if (STATE.phase === 'HEART_3D' || STATE.phase === 'EXPLODE' || STATE.phase === 'FLOATING_WISHES') return;
+
+                ctx.save();
+
+                const leftEyeX = this.centerX - this.eyeSpacing;
+                const rightEyeX = this.centerX + this.eyeSpacing;
+                const eyeY = this.centerY;
+
+                // 1. Draw Rose/Pink Shy Blush underneath
+                if (this.blushAlpha > 0.01) {
+                    ctx.save();
+                    ctx.globalAlpha = this.blushAlpha;
+
+                    // Left Blush
+                    let blushGrad1 = ctx.createRadialGradient(
+                        leftEyeX, eyeY + 50, 5,
+                        leftEyeX, eyeY + 50, 60
+                    );
+                    blushGrad1.addColorStop(0, 'rgba(255, 50, 120, 0.65)');
+                    blushGrad1.addColorStop(1, 'transparent');
+                    ctx.fillStyle = blushGrad1;
+                    ctx.beginPath();
+                    ctx.ellipse(leftEyeX, eyeY + 50, 65, 30, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Right Blush
+                    let blushGrad2 = ctx.createRadialGradient(
+                        rightEyeX, eyeY + 50, 5,
+                        rightEyeX, eyeY + 50, 60
+                    );
+                    blushGrad2.addColorStop(0, 'rgba(255, 50, 120, 0.65)');
+                    blushGrad2.addColorStop(1, 'transparent');
+                    ctx.fillStyle = blushGrad2;
+                    ctx.beginPath();
+                    ctx.ellipse(rightEyeX, eyeY + 50, 65, 30, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Cute blush lines (Anime style)
+                    ctx.strokeStyle = 'rgba(255, 120, 180, 0.8)';
+                    ctx.lineWidth = 2.5;
+                    for (let i = -1; i <= 1; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(leftEyeX + i * 12 - 10, eyeY + 42);
+                        ctx.lineTo(leftEyeX + i * 12 - 2, eyeY + 58);
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(rightEyeX + i * 12 - 10, eyeY + 42);
+                        ctx.lineTo(rightEyeX + i * 12 - 2, eyeY + 58);
+                        ctx.stroke();
+                    }
+
+                    ctx.restore();
+                }
+
+                // Function to draw single eye
+                const drawSingleEye = (x, y) => {
+                    ctx.save();
+                    ctx.translate(x, y);
+
+                    const scaleY = Math.max(0.02, 1 - this.blinkProgress);
+                    ctx.scale(1, scaleY);
+
+                    // Eye Glow Ambient
+                    ctx.shadowBlur = 35;
+                    ctx.shadowColor = '#00e5ff';
+
+                    // Sclera/Base Outline
+                    ctx.fillStyle = '#061325';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.eyeWidth, this.eyeHeight, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Iris Gradient (Electric Cyan / Light Blue)
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.eyeWidth - 4, this.eyeHeight - 4, 0, 0, Math.PI * 2);
+                    ctx.clip();
+
+                    const irisX = this.pupilOffsetX;
+                    const irisY = this.pupilOffsetY;
+
+                    const irisGrad = ctx.createRadialGradient(
+                        irisX, irisY - 10, 5,
+                        irisX, irisY, 45
+                    );
+                    irisGrad.addColorStop(0, '#ffffff');
+                    irisGrad.addColorStop(0.2, '#80f3ff');
+                    irisGrad.addColorStop(0.55, '#00b4d8');
+                    irisGrad.addColorStop(0.85, '#0077b6');
+                    irisGrad.addColorStop(1, '#023e8a');
+
+                    ctx.fillStyle = irisGrad;
+                    ctx.beginPath();
+                    ctx.ellipse(irisX, irisY, this.eyeWidth - 10, this.eyeHeight - 8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Inner Pupil
+                    ctx.fillStyle = '#030a16';
+                    ctx.beginPath();
+                    ctx.ellipse(irisX, irisY + 2, 16, 22, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Anime Catchlights (Highlights)
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#ffffff';
+                    
+                    // Main big top highlight
+                    ctx.beginPath();
+                    ctx.ellipse(irisX - 14, irisY - 16, 12, 16, -Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Smaller bottom highlight
+                    ctx.beginPath();
+                    ctx.arc(irisX + 14, irisY + 16, 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore(); // end clip
+
+                    // Upper Eyelined Arc & Eyelashes
+                    ctx.strokeStyle = '#e0f7fc';
+                    ctx.lineWidth = 5;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00f2fe';
+                    ctx.beginPath();
+                    ctx.arc(0, -6, this.eyeWidth + 2, Math.PI * 1.15, Math.PI * 1.85);
+                    ctx.stroke();
+
+                    ctx.restore();
+                };
+
+                drawSingleEye(leftEyeX, eyeY);
+                drawSingleEye(rightEyeX, eyeY);
+
+                // If fully closed (cute sleeping arcs)
+                if (this.blinkProgress > 0.85) {
+                    ctx.save();
+                    ctx.strokeStyle = '#00f2fe';
+                    ctx.lineWidth = 6;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#00f2fe';
+                    ctx.lineCap = 'round';
+
+                    // Left Sleeping Arc
+                    ctx.beginPath();
+                    ctx.arc(leftEyeX, eyeY + 10, 42, Math.PI * 1.2, Math.PI * 1.8);
+                    ctx.stroke();
+
+                    // Right Sleeping Arc
+                    ctx.beginPath();
+                    ctx.arc(rightEyeX, eyeY + 10, 42, Math.PI * 1.2, Math.PI * 1.8);
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // ==========================================
+        // 3D PARAMETRIC GLOWING NEON HEART
+        // ==========================================
+        class Heart3D {
+            constructor() {
+                this.nodes = [];
+                this.filaments = [];
+                this.scale = Math.min(STATE.width, STATE.height) / 38;
+                this.rotX = 0;
+                this.rotY = 0;
+                this.rotZ = 0;
+                this.speedY = 0.022;
+                this.pulse = 0;
+                this.alpha = 0;
+                this.exploding = false;
+
+                this.generateMesh();
+            }
+
+            generateMesh() {
+                this.nodes = [];
+                const count = 380;
+                for (let i = 0; i < count; i++) {
+                    const t = random(0, Math.PI * 2);
+                    const u = random(-Math.PI, Math.PI);
+
+                    // 3D Parametric Heart Equations
+                    // x = 16 sin^3(t)
+                    // y = 13 cos(t) - 5 cos(2t) - 2 cos(3t) - cos(4t)
+                    // z = u * depth
+                    const x = 16 * Math.pow(Math.sin(t), 3);
+                    const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                    const z = (Math.sin(u) * 8) * (1 - Math.abs(t - Math.PI) / Math.PI);
+
+                    this.nodes.push({
+                        x: x,
+                        y: y,
+                        z: z,
+                        baseX: x,
+                        baseY: y,
+                        baseZ: z,
+                        color: ['#00f2fe', '#ff007f', '#ffffff', '#ff99cc'][randomInt(0, 3)]
+                    });
+                }
+            }
+
+            update() {
+                if (STATE.phase !== 'HEART_3D') return;
+
+                this.alpha += (1 - this.alpha) * 0.05;
+                this.pulse += 0.06;
+                this.rotY += this.speedY;
+                this.rotX = Math.sin(this.pulse * 0.5) * 0.2;
+                this.rotZ = Math.cos(this.pulse * 0.3) * 0.15;
+
+                // Dynamic pulsation
+                const currentScale = this.scale * (1 + Math.sin(this.pulse) * 0.08);
+
+                this.nodes.forEach(node => {
+                    // Apply 3D Rotations
+                    let x = node.baseX * currentScale;
+                    let y = node.baseY * currentScale;
+                    let z = node.baseZ * currentScale;
+
+                    // Rotate Y
+                    let x1 = x * Math.cos(this.rotY) - z * Math.sin(this.rotY);
+                    let z1 = z * Math.cos(this.rotY) + x * Math.sin(this.rotY);
+
+                    // Rotate X
+                    let y2 = y * Math.cos(this.rotX) - z1 * Math.sin(this.rotX);
+                    let z2 = z1 * Math.cos(this.rotX) + y * Math.sin(this.rotX);
+
+                    // Rotate Z
+                    let x3 = x1 * Math.cos(this.rotZ) - y2 * Math.sin(this.rotZ);
+                    let y3 = y2 * Math.cos(this.rotZ) + x1 * Math.sin(this.rotZ);
+
+                    // Perspective Projection
+                    const fov = 400;
+                    const perspective = fov / (fov + z2);
+
+                    node.projX = STATE.width / 2 + x3 * perspective;
+                    node.projY = STATE.height * 0.42 + y3 * perspective;
+                    node.projSize = Math.max(0.5, 2.5 * perspective);
+                    node.depth = z2;
+                });
+
+                // Sort by depth for correct opacity rendering
+                this.nodes.sort((a, b) => b.depth - a.depth);
+            }
+
+            draw() {
+                if (STATE.phase !== 'HEART_3D' || this.alpha <= 0) return;
+
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+
+                // Connecting filaments (Laser lines)
+                ctx.lineWidth = 0.6;
+                for (let i = 0; i < this.nodes.length; i += 4) {
+                    const n1 = this.nodes[i];
+                    const n2 = this.nodes[(i + 1) % this.nodes.length];
+                    
+                    const dist = Math.hypot(n1.projX - n2.projX, n1.projY - n2.projY);
+                    if (dist < 70) {
+                        ctx.strokeStyle = 'rgba(0, 240, 255, ' + (0.35 * (1 - dist / 70)) + ')';
+                        ctx.beginPath();
+                        ctx.moveTo(n1.projX, n1.projY);
+                        ctx.lineTo(n2.projX, n2.projY);
+                        ctx.stroke();
+                    }
+                }
+
+                // Render Nodes
+                this.nodes.forEach(node => {
+                    ctx.save();
+                    ctx.fillStyle = node.color;
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = node.color;
+                    ctx.beginPath();
+                    ctx.arc(node.projX, node.projY, node.projSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                ctx.restore();
+            }
+        }
+
+        // ==========================================
+        // EXPLOSION DUST & SPARK PARTICLES
+        // ==========================================
+        class ExplosionParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                const angle = random(0, Math.PI * 2);
+                const speed = random(3, 18);
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.size = random(1.5, 4.5);
+                this.color = ['#00e5ff', '#ff007f', '#ffffff', '#ffd700', '#ff80ab'][randomInt(0, 4)];
+                this.alpha = 1;
+                this.decay = random(0.008, 0.02);
+                this.friction = 0.96;
+                this.gravity = 0.08;
+            }
+
+            update() {
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Cursor Dust Particles
+        let cursorParticles = [];
+        function spawnCursorParticles(x, y) {
+            for (let i = 0; i < 2; i++) {
+                cursorParticles.push({
+                    x: x + random(-5, 5),
+                    y: y + random(-5, 5),
+                    vx: random(-1, 1),
+                    vy: random(-1.5, 0.5),
+                    size: random(1, 3),
+                    alpha: 1,
+                    color: ['#00e5ff', '#ff007f', '#ffffff'][randomInt(0, 2)]
+                });
+            }
+        }
+
+        function updateAndDrawCursorParticles() {
+            for (let i = cursorParticles.length - 1; i >= 0; i--) {
+                const p = cursorParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.025;
+
+                if (p.alpha <= 0) {
+                    cursorParticles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ==========================================
+        // FLOATING 3D WISH CARDS CONTROLLER
+        // ==========================================
+        class WishCardManager {
+            constructor() {
+                this.cards = [];
+                this.angles = [];
+            }
+
+            init() {
+                wishContainer.innerHTML = '';
+                this.cards = [];
+                this.angles = [];
+
+                WISHES.forEach((text, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'wish-card';
+                    el.innerText = text;
+                    wishContainer.appendChild(el);
+
+                    this.cards.push(el);
+                    this.angles.push((i / WISHES.length) * Math.PI * 2);
+
+                    // Click sound & extra sparkle
+                    el.addEventListener('click', (e) => {
+                        audioEngine.playChime(random(800, 1400));
+                        for (let k = 0; k < 20; k++) {
+                            explosionParticles.push(new ExplosionParticle(e.clientX, e.clientY));
+                        }
+                    });
+                });
+            }
+
+            update() {
+                if (STATE.phase !== 'FLOATING_WISHES') return;
+
+                const radiusX = Math.min(STATE.width * 0.38, 420);
+                const radiusY = Math.min(STATE.height * 0.28, 220);
+                const centerX = STATE.width / 2;
+                const centerY = STATE.height * 0.52;
+
+                this.cards.forEach((card, i) => {
+                    this.angles[i] += 0.003; // Smooth orbit rotation
+                    const angle = this.angles[i];
+
+                    const x = centerX + Math.cos(angle) * radiusX;
+                    const y = centerY + Math.sin(angle) * radiusY;
+                    const z = Math.sin(angle); // -1 to 1 depth
+
+                    const scale = 0.75 + (z + 1) * 0.25; // 0.75 to 1.25
+                    const opacity = 0.4 + (z + 1) * 0.3;  // depth transparency
+
+                    card.style.left = `${x}px`;
+                    card.style.top = `${y}px`;
+                    card.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                    card.style.opacity = opacity;
+                    card.style.zIndex = Math.floor((z + 1) * 100);
+
+                    if (!card.classList.contains('visible')) {
+                        setTimeout(() => card.classList.add('visible'), i * 300);
+                    }
+                });
+            }
+        }
+
+        // ==========================================
+        // SYSTEM INSTANCES & SEQUENCER FLOW
+        // ==========================================
+        let stars = [];
+        let shootingStars = [];
+        let animeEyes = new AnimeEyes();
+        let heart3D = new Heart3D();
+        let explosionParticles = [];
+        let wishManager = new WishCardManager();
+
+        function initBackground() {
+            stars = [];
+            for (let i = 0; i < 220; i++) stars.push(new Star());
+
+            shootingStars = [];
+            for (let i = 0; i < 3; i++) shootingStars.push(new ShootingStar());
+        }
+
+        // Trigger Shooting Star At Random Intervals
+        function scheduleShootingStar() {
+            setTimeout(() => {
+                const inactive = shootingStars.find(s => !s.active);
+                if (inactive) inactive.spawn();
+                scheduleShootingStar();
+            }, random(2500, 6000));
+        }
+
+        // Dialogue Typewriter Animation Flow
+        function runDialogueSequence() {
+            STATE.phase = 'DIALOGUE';
+            speechBubble.classList.add('active');
+            animeEyes.targetBlush = 0.85; // Cute blush when talking
+
+            let index = 0;
+
+            function playNextPhrase() {
+                if (index >= DIALOGUE_SCRIPT.length) {
+                    // Dialogue finish -> Close Eyes
+                    speechBubble.classList.remove('active');
+                    animeEyes.targetBlush = 0;
+                    animeEyes.isFullyClosed = true;
+                    STATE.phase = 'EYES_CLOSING';
+
+                    setTimeout(() => {
+                        // Transition to 3D Heart
+                        STATE.phase = 'HEART_3D';
+                        audioEngine.playChime(600);
+
+                        // Heart spins for 4 seconds then explodes
+                        setTimeout(() => {
+                            triggerHeartExplosion();
+                        }, 4800);
+
+                    }, 1200);
+
+                    return;
+                }
+
+                const current = DIALOGUE_SCRIPT[index];
+                dialogueText.innerText = '';
+                let charIdx = 0;
+
+                const typeInterval = setInterval(() => {
+                    if (charIdx < current.text.length) {
+                        dialogueText.innerText += current.text.charAt(charIdx);
+                        charIdx++;
+                    } else {
+                        clearInterval(typeInterval);
+                        setTimeout(() => {
+                            index++;
+                            playNextPhrase();
+                        }, current.delay);
+                    }
+                }, 60);
+            }
+
+            playNextPhrase();
+        }
+
+        // Heart Explosion Flow
+        function triggerHeartExplosion() {
+            STATE.phase = 'EXPLODE';
+            audioEngine.playExplosionSound();
+
+            const cx = STATE.width / 2;
+            const cy = STATE.height * 0.42;
+
+            // Spawn massive explosion particles
+            for (let i = 0; i < 350; i++) {
+                explosionParticles.push(new ExplosionParticle(cx, cy));
+            }
+
+            // Show Title Header & Floating Wishes
+            setTimeout(() => {
+                STATE.phase = 'FLOATING_WISHES';
+                titleHeader.classList.add('show');
+                wishManager.init();
+
+                setTimeout(() => {
+                    btnReplay.classList.add('show');
+                }, 2000);
+            }, 600);
+        }
+
+        // Reset Sequence
+        function resetSequence() {
+            titleHeader.classList.remove('show');
+            btnReplay.classList.remove('show');
+            speechBubble.classList.remove('active');
+            wishContainer.innerHTML = '';
+            
+            animeEyes = new AnimeEyes();
+            heart3D = new Heart3D();
+            explosionParticles = [];
+
+            runDialogueSequence();
+        }
+
+        // ==========================================
+        // MAIN ANIMATION LOOP
+        // ==========================================
+        function render() {
+            STATE.time += 1;
+
+            // Clear Screen
+            ctx.fillStyle = '#020205';
+            ctx.fillRect(0, 0, STATE.width, STATE.height);
+
+            // 1. Draw Nebula Background
+            drawNebula();
+
+            // 2. Stars & Shooting Stars
+            stars.forEach(s => { s.update(); s.draw(); });
+            shootingStars.forEach(s => { s.update(); s.draw(); });
+
+            // 3. Anime Eyes Layer
+            animeEyes.update();
+            animeEyes.draw();
+
+            // 4. 3D Heart Layer
+            heart3D.update();
+            heart3D.draw();
+
+            // 5. Explosion Particles
+            for (let i = explosionParticles.length - 1; i >= 0; i--) {
+                const p = explosionParticles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) explosionParticles.splice(i, 1);
+            }
+
+            // 6. Cursor Particles
+            updateAndDrawCursorParticles();
+
+            // 7. Update Wish Cards Orbit
+            wishManager.update();
+
+            requestAnimationFrame(render);
+        }
+
+        // ==========================================
+        // EVENT HANDLERS
+        // ==========================================
+        btnStart.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            audioEngine.init();
+            STATE.audioEnabled = true;
+            btnAudio.innerHTML = '<i class="fa-solid fa-music"></i>';
+
+            scheduleShootingStar();
+            runDialogueSequence();
+        });
+
+        btnAudio.addEventListener('click', () => {
+            STATE.audioEnabled = !STATE.audioEnabled;
+            if (STATE.audioEnabled) {
+                audioEngine.init();
+                btnAudio.innerHTML = '<i class="fa-solid fa-music"></i>';
+            } else {
+                btnAudio.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+            }
+        });
+
+        btnSparkle.addEventListener('click', () => {
+            shootingStars.forEach(s => s.spawn());
+            for (let i = 0; i < 40; i++) {
+                explosionParticles.push(new ExplosionParticle(
+                    random(STATE.width * 0.2, STATE.width * 0.8),
+                    random(STATE.height * 0.2, STATE.height * 0.6)
+                ));
+            }
+        });
+
+        btnReplay.addEventListener('click', () => {
+            resetSequence();
+        });
+
+        // Initialize Application
+        window.onload = () => {
+            initBackground();
+            requestAnimationFrame(render);
+        };
+    </script>
+</body>
+</html>
